@@ -1,0 +1,23 @@
+{
+  "name": "the-onion",
+  "version": "1.0.0",
+  "description": "", 
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -d",
+    "start": "tsc && node ./dist/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/uuid": "^3.4.4",
+    "commander": "^2.19.0",
+    "uuid": "^3.3.2"
+  },
+  "dependencies": {
+    "@types/commander": "^2.12.2",
+    "@types/node": "^10.12.0"
+  }
+}

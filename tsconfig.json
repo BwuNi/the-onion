@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "target": "ES2016",
+        "module": "commonjs",
+        "allowJs": false,
+        "sourceMap": true,
+        "removeComments": true,
+        "strict": true,
+        "noImplicitAny": true,
+        // "moduleResolution": "node",
+        "preserveConstEnums": true,
+        "outDir": "./dist", 
+        "types": [
+            "node"
+          ]
+    },
+    "compileOnSave": true,
+    "include": [
+        "src/**/*", "token/index.ts", "token/TokenTool.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "**/*.spec.ts"
+    ]
+}

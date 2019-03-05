@@ -21,18 +21,45 @@ class Onion {
         this.middleWares = this.middleWares.filter((v => v.id !== id));
     }
     run(ctx) {
-        const mvArr = this.middleWares.map((v, i, a) => (ctx) => __awaiter(this, void 0, void 0, function* () {
-            const mv = mvArr[i + 1];
-            if (mv)
-                return yield mv(ctx);
-            else
-                return ctx;
-        }));
-        if (mvArr[0])
-            return mvArr[0](ctx);
-        else
-            return ctx;
+        return __awaiter(this, void 0, void 0, function* () {
+            const error = (e) => { throw OnionError.new(e); };
+            const mvArr = this.middleWares.map((v, i) => (ctx) => __awaiter(this, void 0, void 0, function* () {
+                const mv = mvArr[i + 1];
+                if (mv) {
+                    return yield v.value(ctx, mv, error);
+                }
+                else {
+                    return yield v.value(ctx, (value) => __awaiter(this, void 0, void 0, function* () { return value; }), error);
+                }
+            }));
+            try {
+                if (mvArr[0])
+                    return yield mvArr[0](ctx);
+                else
+                    return ctx;
+            }
+            catch (e) {
+                if (e instanceof OnionError) {
+                    return e.valueOf();
+                }
+                else
+                    throw e;
+            }
+        });
     }
 }
 exports.default = Onion;
+class OnionError {
+    constructor(e) { this.v = e; }
+    static new(e) { return new this(e); }
+    valueOf() { return this.v; }
+}
+const o = new Onion();
+o.register((v, n, e) => __awaiter(this, void 0, void 0, function* () {
+    e(1);
+    return "w";
+}));
+(() => __awaiter(this, void 0, void 0, function* () {
+    console.log(yield o.run("r"));
+}))();
 //# sourceMappingURL=index.js.map

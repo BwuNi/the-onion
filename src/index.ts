@@ -1,14 +1,14 @@
-import * as uid from 'uuid/v4'
 
-export default class Onion<T> {
+
+export default class Onion<T, E> {
 
     middleWares: ({
         id: symbol,
-        value: (value: T,next:(ctx:T)=>Promise<T> ) => Promise<T> 
+        value: (value: T, next: (ctx: T) => Promise<T>, error: (e: E) => void) => Promise<T>
     })[] = []
 
     register(
-        value: (value: T,next:(ctx:T)=>Promise<T>) => Promise<T> 
+        value: (value: T, next: (ctx: T) => Promise<T>, error: (e: E) => void) => Promise<T>
     ) {
         const id = Symbol()
         this.middleWares.push({ id, value })
@@ -20,23 +20,54 @@ export default class Onion<T> {
         this.middleWares = this.middleWares.filter((v => v.id !== id))
     }
 
-    run(ctx:T){
-        type MV = (value: T) => Promise<T> 
+    async run(ctx: T): Promise<T | E> {
+        type MV = (value: T) => Promise<T>
 
-        const mvArr : MV[] = this.middleWares.map((v,i,a)=>async (ctx:T) => {
-            
+        const error = (e: E) => { throw OnionError.new(e) }
 
-            const mv = mvArr[i+1]
+        const mvArr: MV[] = this.middleWares.map((v, i) => async (ctx: T) => {
 
-            if(mv)
-                return await mv(ctx)
+            const mv = mvArr[i + 1]
+
+            if (mv)
+                return await v.value(ctx, mv, error)
             else
-                return ctx
+                return await v.value(ctx, async (value: T) => value, error)
 
         })
 
-        if(mvArr[0]) return mvArr[0](ctx)
-        else return ctx
-        
+        try {
+            if (mvArr[0])
+                return await mvArr[0](ctx)
+            else
+                return ctx
+        } catch (e) {
+            // 仅捕获 OnionError
+            if (e instanceof OnionError)
+                return <E>e.valueOf()
+            else
+                throw e
+        }
     }
 }
+
+
+class OnionError<E>{
+    v: E
+    constructor(e: E) { this.v = e }
+    static new<E>(e: E) { return new this<E>(e) }
+    valueOf() { return this.v }
+}
+
+
+const o = new Onion<string, number>()
+
+o.register(async (v, n, e) => {
+    e(1)
+    return "w"
+});
+
+
+(async () => {
+    console.log(await o.run("r"))
+})()
